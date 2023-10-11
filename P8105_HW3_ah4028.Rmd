@@ -1,0 +1,49 @@
+---
+title: "P8105_HW3_ah4028"
+author: "Austin Hsin"
+date: "2023-10-10"
+output: github_document
+---
+
+## Problem 0
+
+Setup code for assignment - including p8105 datasets library
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(p8105.datasets)
+```
+
+## Problem 1
+
+Here we are exploring the `instacart` dataset.
+
+```{r}
+# Initial dataset exploration
+instacart
+
+# Number of aisles, sorted by number of items bought from them
+instacart |>
+  group_by(aisle) |>
+  summarize(
+    items_bought = n())|>
+  arrange(desc(items_bought))
+```
+
+The `instacart` dataset has 15 variables with 1,384,617 separate entry orders, identified by `order_id`, `product-id`, and `product_name`, further specified by `aisle_id` and `aisle` name, as well as `department`.  
+
+***How many aisles are there, and which aisles are the most items ordered from?***
+
+There are 134 different aisles with `fresh vegetables`, `fresh fruits`, and `packaged vegetables fruits` as the top three aisles bought from with 150609, 150473, and 78493 items bought respectively.
+
+Make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
+Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
+Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
+Problem 2
+
+##
+
+```{r}
+```
+
