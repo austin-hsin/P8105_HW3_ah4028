@@ -11,17 +11,16 @@ Setup code for assignment - including p8105 datasets library
 
 ```{r setup, include=FALSE}
 library(tidyverse)
-library(tidyverse)
 library(ggridges)
 library(patchwork)
-
+library(ggplot2)
 library(p8105.datasets)
 
 knitr::opts_chunk$set(
 	echo = TRUE,
 	warning = FALSE,
 	fig.width = 8, 
-  fig.height = 6,
+  fig.height = 8,
   out.width = "90%"
 )
 
@@ -40,7 +39,7 @@ scale_fill_discrete = scale_fill_viridis_d
 
 Here we are exploring the `instacart` dataset.
 
-```{r}
+```{r, `instacart`, include = FALSE}
 instacart |> 
   count(aisle) |> 
   arrange(desc(n))
@@ -53,7 +52,7 @@ There are 134 different aisles with `fresh vegetables`, `fresh fruits`, and `pac
 
 Here we plot the number of items ordered in each aisle in ascending order.
 
-```{r}
+```{r, `instacart plot 1`, include = FALSE}
 instacart |> 
   count(aisle) |> 
   filter(n > 10000) |> 
@@ -62,12 +61,11 @@ instacart |>
   geom_point() + 
   labs(title = "Number of items ordered in each aisle") +
   theme(axis.text.x = element_text(angle = 60, hjust = 1))
-
 ```
 
 Next we plot the three most popular items in aisles `baking ingredients`, `dog food care`, and `packaged vegetables fruits`, and includes the number of times each item is ordered.
 
-```{r}
+```{r, `instacart plot 2`}
 instacart |> 
   filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) |>
   group_by(aisle) |> 
@@ -80,7 +78,7 @@ instacart |>
 
 Lastly, we plot the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week. Pink Lady Apples are generally purchased slightly earlier in the day than Coffee Ice Cream, with the exception of day 5.
 
-```{r}
+```{r, `instacart plot 3`, message = FALSE, echo = FALSE}
 instacart |>
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) |>
   group_by(product_name, order_dow) |>
@@ -93,7 +91,75 @@ instacart |>
 
 ## Problem 2
 
-```{r}
-data("brfss_smart2010")
+First we clean the BRFSS dataset.
+
+```{r, `brfss_clean`, echo = FALSE}
+# Filtering by `Overall Health` + Ordering `Response`
+brfss_clean <- brfss_smart2010 |>
+  filter(Topic == "Overall Health")|>
+  rename("State" = Locationabbr,
+         "County" = Locationdesc,
+         "Prevalence" = Data_value,
+         "Lower Limit" = Confidence_limit_Low,
+         "Upper Limit" = Confidence_limit_High)|>
+    mutate(Response = factor(Response, levels = c("Poor", "Fair", "Good", "Very good", "Excellent")), ordered = is.ordered(Response))
 ```
 
+In 2002, there were `r brfss_clean |> select(State, Year) |> filter(Year == 2002)|> count(State) |> filter (n>=35) |> count()` states that were observed at 7 or more locations whereas in 2010 there were `r brfss_clean |> select(State, Year) |> filter(Year == 2010)|> count(State) |> filter (n>=35) |> count()` states.
+
+Next we create and plot a constricted dataframe from our cleaned BRFSS datatset.
+
+```{r, `brfss_df plot`, echo = FALSE}
+# Creating "Spaghetti" plot dataset
+brfss_df <- brfss_clean|>
+  select(Year, "State", Response, "Prevalence")|>
+  filter(Response == "Excellent")|>
+  group_by(Year, State) |>
+  summarise_at(vars(Prevalence),
+               list(Mean_Prevalence = mean))
+# Plotting dataset
+ggplot(brfss_df, aes(x = Year, y = Mean_Prevalence)) + 
+  geom_line(aes(color = State), alpha = 0.8) + 
+  labs(title = "Mean Prevalence of Excellent Health Responses 2002-2010") +
+  theme(legend.position = "right") +
+  scale_x_continuous(
+    breaks = c(2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010), 
+    labels = c(2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010))
+```
+
+Finally, we will plot the distribution of `prevlance` in NY state for years 2006 and 2010.
+
+```{r, `brfss_NYS_df plots`, echo = FALSE}
+# 2006 NY State Data - brfss
+brfss_NYS_2006_df <- brfss_clean |>
+  select(Year, "State", "County", Response, "Prevalence")|>
+  filter(State == "NY", Year == 2006)
+
+# 2010 NY State Data - brfss
+brfss_NYS_2010_df <- brfss_clean |>
+  select(Year, "State", "County", Response, "Prevalence")|>
+  filter(State == "NY", Year == 2010)
+
+# Plotting both datasets together
+p1 <- ggplot(brfss_NYS_2006_df, aes(x = County, y = Prevalence)) + 
+  geom_point(aes(color = Response), size = 4,  alpha = 0.8) +
+  theme(legend.position = "right") + 
+  ggtitle('2006') +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) + 
+  scale_y_continuous(
+    breaks = c(5, 10, 15, 20, 25, 30, 35, 40), 
+    labels = c(5, 10, 15, 20, 25, 30, 35, 40))
+
+p2 <- ggplot(brfss_NYS_2010_df, aes(x = County, y = Prevalence)) + 
+  geom_point(aes(color = Response), size = 4,  alpha = 0.8) +
+  theme(legend.position = "right") + 
+  ggtitle('2010') +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) + 
+  scale_y_continuous(
+    breaks = c(5, 10, 15, 20, 25, 30, 35, 40), 
+    labels = c(5, 10, 15, 20, 25, 30, 35, 40))
+
+NYS_patchwork <- (p1 + p2)
+NYS_patchwork + plot_annotation(
+  title = "Comparison of Distribution of Health Responses in NY State in 2006 and 2010")
+```
