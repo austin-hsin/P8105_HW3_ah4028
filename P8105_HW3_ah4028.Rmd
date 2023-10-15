@@ -282,7 +282,7 @@ According to the plot, `total_activity` decreases as age increases regardless of
 The opposite held true in the highschool equivalent and more than highschool subsets where females had higher average total activity across the entire age range. 
 
 5. Finally, we plot total activity over the recorded 24 hour period.
-```{r, `24hr_activity by education and sex`, message = FALSE, fig.width = 15}
+```{r, `24hr_activity by education and sex`, message = FALSE}
 # Plotting activity for Less than Highschool subset
 MIMS_tidy |>
   pivot_longer(
@@ -293,9 +293,14 @@ ggplot(aes(x = minutes , y = activity, color = sex)) +
   geom_point(aes(color = sex), alpha = 0.25, size = 0.8) +
   geom_smooth(se = FALSE) + 
   facet_wrap(.~education) +
-  labs(title = "24 Hour Activity Stratified by Education and Sex") +
+  labs(title = "24 Hour Activity Stratified by Education and Sex",
+       x = "Minutes",
+       y = "Activity") +
   theme(legend.position = "right") +
-  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+  theme(axis.text.x = element_blank()) +
+  scale_x_discrete(
+    breaks = c(0, 500, 1000, 1500), 
+    labels = c(0, 500, 1000, 1500))
 ```
 
 From the smooth trend lines, there does not seem to be any significant differences across the education subsets. Similarly, the plot does not show any significant dips in activity for sleeping, which can be attributed to the variety of sleep schedules this participant group has.
