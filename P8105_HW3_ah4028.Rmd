@@ -37,7 +37,7 @@ scale_fill_discrete = scale_fill_viridis_d
 
 ## Problem 1
 
-Here we are exploring the `instacart` dataset.
+1. Here we are exploring the `instacart` dataset.
 
 ```{r, `instacart`, include = FALSE}
 instacart |> 
@@ -50,7 +50,7 @@ In total, there are `r instacart |> select(product_id) |> distinct() |> count()`
 
 There are 134 different aisles with `fresh vegetables`, `fresh fruits`, and `packaged vegetables fruits` as the top three aisles bought from with 150609, 150473, and 78493 items bought respectively.
 
-Here we plot the number of items ordered in each aisle in ascending order.
+2. Here we plot the number of items ordered in each aisle in ascending order.
 
 ```{r, `instacart plot 1`, include = FALSE}
 instacart |> 
@@ -63,7 +63,7 @@ instacart |>
   theme(axis.text.x = element_text(angle = 60, hjust = 1))
 ```
 
-Next we plot the three most popular items in aisles `baking ingredients`, `dog food care`, and `packaged vegetables fruits`, and includes the number of times each item is ordered.
+3. Next we plot the three most popular items in aisles `baking ingredients`, `dog food care`, and `packaged vegetables fruits`, and includes the number of times each item is ordered.
 
 ```{r, `instacart plot 2`}
 instacart |> 
@@ -76,7 +76,7 @@ instacart |>
   knitr::kable()
 ```
 
-Lastly, we plot the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week. Pink Lady Apples are generally purchased slightly earlier in the day than Coffee Ice Cream, with the exception of day 5.
+4. Lastly, we plot the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week. Pink Lady Apples are generally purchased slightly earlier in the day than Coffee Ice Cream, with the exception of day 5.
 
 ```{r, `instacart plot 3`, message = FALSE, echo = FALSE}
 instacart |>
@@ -91,7 +91,7 @@ instacart |>
 
 ## Problem 2
 
-First we clean the BRFSS dataset.
+1. First we clean the BRFSS dataset.
 
 ```{r, `brfss_clean`, echo = FALSE}
 # Filtering by `Overall Health` + Ordering `Response`
@@ -107,7 +107,7 @@ brfss_clean <- brfss_smart2010 |>
 
 In 2002, there were `r brfss_clean |> select(State, Year) |> filter(Year == 2002)|> count(State) |> filter (n>=35) |> count()` states that were observed at 7 or more locations whereas in 2010 there were `r brfss_clean |> select(State, Year) |> filter(Year == 2010)|> count(State) |> filter (n>=35) |> count()` states.
 
-Next we create and plot a constricted dataframe from our cleaned BRFSS datatset.
+2. Next we create and plot a constricted dataframe from our cleaned BRFSS datatset.
 
 ```{r, `brfss_df plot`, echo = FALSE}
 # Creating "Spaghetti" plot dataset
@@ -127,7 +127,7 @@ ggplot(brfss_df, aes(x = Year, y = Mean_Prevalence)) +
     labels = c(2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010))
 ```
 
-Finally, we will plot the distribution of `prevlance` in NY state for years 2006 and 2010.
+3. Finally, we will plot the distribution of `Response` in NY state for years 2006 and 2010.
 
 ```{r, `brfss_NYS_df plots`, echo = FALSE}
 # 2006 NY State Data - brfss
@@ -140,7 +140,7 @@ brfss_NYS_2010_df <- brfss_clean |>
   select(Year, "State", "County", Response, "Prevalence")|>
   filter(State == "NY", Year == 2010)
 
-# Plotting both datasets together
+# Setting 2006 as p1
 p1 <- ggplot(brfss_NYS_2006_df, aes(x = County, y = Prevalence)) + 
   geom_point(aes(color = Response), size = 4,  alpha = 0.8) +
   theme(legend.position = "right") + 
@@ -150,6 +150,7 @@ p1 <- ggplot(brfss_NYS_2006_df, aes(x = County, y = Prevalence)) +
     breaks = c(5, 10, 15, 20, 25, 30, 35, 40), 
     labels = c(5, 10, 15, 20, 25, 30, 35, 40))
 
+# Setting 2010 as p2
 p2 <- ggplot(brfss_NYS_2010_df, aes(x = County, y = Prevalence)) + 
   geom_point(aes(color = Response), size = 4,  alpha = 0.8) +
   theme(legend.position = "right") + 
@@ -159,7 +160,142 @@ p2 <- ggplot(brfss_NYS_2010_df, aes(x = County, y = Prevalence)) +
     breaks = c(5, 10, 15, 20, 25, 30, 35, 40), 
     labels = c(5, 10, 15, 20, 25, 30, 35, 40))
 
+# Combining 2006 and 2010 datasets
 NYS_patchwork <- (p1 + p2)
 NYS_patchwork + plot_annotation(
   title = "Comparison of Distribution of Health Responses in NY State in 2006 and 2010")
 ```
+
+## Problem 3
+
+1. Here we load, tidy, merge, and organize the NHANES MIMS demographic and accelerometer datasets.
+
+```{r, `MIMS_covar_data` and `MIMS_accel_data`, echo = FALSE}
+# Demographics dataset
+MIMS_covar_data = read_csv(file = "./nhanes_covar.csv", skip = 4, col_types = 
+                             cols("integer", "integer", "integer", "numeric", "integer"
+                                  ))|>
+  janitor::clean_names()|>
+  mutate(
+    sex = 
+      case_match(
+        sex, 
+        1 ~ "male", 
+        2 ~ "female"),
+    sex = as.factor(sex)) |>
+  mutate(education = 
+           case_match(
+             education,
+        1 ~ "Less than Highschool",
+        2 ~ "Highschool Equivalent",
+        3 ~ "More than Highschool"),
+        education = as.factor(education)) |>
+  mutate(education = ordered(education, levels = c("Less than Highschool",
+                               "Highschool Equivalent",
+                               "More than Highschool"))
+         ) |>
+  na.omit()|>
+  filter(age >=21)
+
+# Accelerometer dataset
+MIMS_accel_data = read_csv(file = "./nhanes_accel.csv", col_types = 
+                             cols("integer", "numeric")
+                           ) |>
+  janitor::clean_names()
+
+# Merging Demographics and Accelerometer datasets
+MIMS_tidy = 
+  full_join(MIMS_covar_data, MIMS_accel_data, by = "seqn")|>
+  na.omit()
+```
+
+2. Next we display the number of men and women in each education category.
+
+```{r, `MIM_mf_education`, echo = FALSE}
+# Table of Male and Female in each education category
+MIMS_tidy |>
+  select(sex, education) |>
+  group_by(sex, education) |>
+  tally()|>
+  knitr::kable(digits = 2)
+```
+
+For the categories less than a high school education and higher than a high school education, we have similar numbers of male and female. However, we have a significantly higher number of males who have a high school education than females at 35 compared to 23.
+
+3. Similarly, we display the age distributions for men and women in each education category.
+
+```{r, `MIM_age_mf_education`, echo = FALSE, fig.width = 12}
+# Age Distribution of Males in each education category
+m1 <- MIMS_tidy |>
+  filter(sex == "male")|>
+  mutate(age = cut(age, breaks = seq(20, 80, by = 10))) |>
+  ggplot(aes(x = age, fill = education)) + 
+  geom_bar(position = "dodge") +
+  labs(title = "Male") +
+  theme(legend.position = "right") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  scale_fill_manual(values = c("#00AFBB", "#E7B800", "#FC4E07")) +
+  scale_y_continuous(
+    breaks = c(2, 4, 6, 8, 10, 12, 14, 16), 
+    labels = c(2, 4, 6, 8, 10, 12, 14, 16))
+
+# Age Distribution of Females in each education catgeory
+f1 <- MIMS_tidy |>
+  filter(sex == "female")|>
+  mutate(age = cut(age, breaks = seq(20, 80, by = 10))) |>
+  ggplot(aes(x = age, fill = education)) + 
+  geom_bar(position = "dodge") +
+  labs(title = "Female") +
+  theme(legend.position = "right") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  scale_fill_manual(values = c("#00AFBB", "#E7B800", "#FC4E07")) +
+  scale_y_continuous(
+    breaks = c(2, 4, 6, 8, 10, 12, 14, 16), 
+    labels = c(2, 4, 6, 8, 10, 12, 14, 16))
+
+# Combined Distributions of Male and Female 
+MIM_mf_age_education_plot <- (m1 + f1)
+MIM_mf_age_education_plot + 
+  plot_annotation(
+  title = "Age Distribution of Men and Women by Education Level")
+```
+
+According to the visual of age distribution of male and female by education level, women 40 and under have a higher prevalence of higher than high school education compared to 40 and under men who have a greater number of high school educations. We can also confirm our previous comment that male across the age range have a more consistent prevalence of high school educations compared to female who are biased towards higher than highschool until the 60-80 age range.
+
+4. Next, we aggregate activity and plot total activity against age.
+
+```{r, `total_activity by age and sex`, message = FALSE}
+# Creating total_activity variable and plotting it against age and sex
+MIMS_tidy |>
+  mutate(
+    total_activity = rowSums(across(c(min1:min1440)))) |>
+  select(-c(min1:min1440))|>
+  group_by(sex)|>
+  ggplot(aes(x = age, y = total_activity, color = sex)) + 
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  facet_wrap(.~education) +
+  labs(title = "Total Activity by Age Stratified by Education and Sex") 
+```
+
+According to the plot, `total_activity` decreases as age increases regardless of sex. In the less than highschool subset, males had a higher average total activity, with the exception of those aged 40 and under where females had a higher average.
+The opposite held true in the highschool equivalent and more than highschool subsets where females had higher average total activity across the entire age range. 
+
+5. Finally, we plot total activity over the recorded 24 hour period.
+```{r, `24hr_activity by education and sex`, message = FALSE, fig.width = 15}
+# Plotting activity for Less than Highschool subset
+MIMS_tidy |>
+  pivot_longer(
+    min1:min1440,
+    names_to = "minutes",
+    values_to = "activity")|>
+ggplot(aes(x = minutes , y = activity, color = sex)) +
+  geom_point(aes(color = sex), alpha = 0.25, size = 0.8) +
+  geom_smooth(se = FALSE) + 
+  facet_wrap(.~education) +
+  labs(title = "24 Hour Activity Stratified by Education and Sex") +
+  theme(legend.position = "right") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+From the smooth trend lines, there does not seem to be any significant differences across the education subsets. Similarly, the plot does not show any significant dips in activity for sleeping, which can be attributed to the variety of sleep schedules this participant group has.
